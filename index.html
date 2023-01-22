@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Shopping</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdn.lineicons.com/4.0/lineicons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+    <script src="https://unpkg.com/vue@3"></script>
+    <script src="js/products.js"></script>
+    <style>
+        [v-cloak] {
+            display: none;
+        }
+    </style>
+
+</head>
+<body>
+
+    <div id="app" v-cloak>
+        <div class="nav bg-dark">
+            <div class="container d-flex justify-content-between p-2 align-items-baseline">
+                <div class="logo fw-bold fs-2">
+                    <a class="text-decoration-none text-warning" href="#" @click.prevent="isCardVisible=false">Products</a>
+                </div>
+                <div class="links d-flex justify-content-between align-items-baseline">
+                    <p class="text-light mx-3"> <span v-text="cart.items.length"></span> <template v-if="cart.items.length==0 || cart.items.length > 1">items</template> <template v-if="cart.items.length==1">item</template> with total price[0$]</p>
+                    <div style="width: 40px;height: 40px;"  class="cart justify-content-center align-items-center rounded rounded-circle btn btn-light d-flex" @click.prevent="isCardVisible=true">
+                     
+                    <div class="shopping-cart p-3" v-if="cart.items.length > 0" >
+                        <div class="header d-flex justify-content-between">
+                            <p>View Cart</p>
+                            <p>{{cart.items.length}}</p>
+                        </div>
+                        <hr style="margin-top : -5px;">
+                        <div class="cart-content" v-for="item in cart.items">
+                            <div class="item d-flex justify-content-between align-items-center my-1">
+                                <img width="70" height="70" :src="item.product.image"  alt="">
+                                    <div class="item-content  w-100 ms-3 d-flex align-items-start ms-1 flex-column justify-content-start">
+                                        <span>{{item.product.name}}</span>
+                                        <p>{{item.product.price}} <sub>x {{item.quantity}}</sub></p>
+                                    </div>
+                                    <div class="item-remove">
+                                        <i class="fs-4 lni lni-trash-can" @click.prevent="false"></i>
+                                        
+                                    </div>
+                                
+                            
+                        
+                            </div>
+                            <hr>
+                        </div>
+                    </div>
+                        <i class="fs-5 lni lni-cart"></i>
+                        <span class="count-item" v-text="cart.items.length"></span>
+                    </div>
+                    
+                </div>
+
+                
+            </div>
+        </div>
+    
+    <div class="container">
+
+        <div class="row row-cols-1 row-cols-md-4 g-3 mt-2" v-if="isCardVisible==false">
+            <div class="col" v-for="product in products">
+                    <div class="card" >
+                        <img :src="product.image" class="card-img-top" alt="">
+                        <div class="card-body">
+                            <h5 class="card-title">{{product.name}}</h5>
+                            <div class="card-text">{{product.description}}</div>
+                        </div>
+                        <div class="card-footer d-flex justify-content-between align-items-baseline">
+                            <p :class="[product.instock>=5? 'more':'' , product.instock<5? 'less':'' , product.instock==0? 'empty':'' ]">Stock : <span>{{product.instock}}</span></p>
+                            <button  class="btn btn-success" :disabled="product.instock==0" @click="addToCart(product)">Add To Cart</button>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
+        <div class="row" v-if="isCardVisible">
+            <h3 v-if="cart.items.length==0" class="d-flex justify-content-center m-3 shadow-lg rounded rounded-3 text-primary p-5">Your Card Is Empty, Plz add products ...!🙅‍♂️</h3>
+
+            <table class="table  table-striped my-2" v-else>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Add|Remove</th>
+                            <th>Total Price</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr v-for="item in cart.items">
+                            <td>{{item.product.id}}</td>
+                            <td>{{item.product.name}}</td>
+                            <td>{{item.product.price}}</td>
+                            <td>{{item.quantity}}</td>
+                            <td>
+                                <button class="btn btn-success" :disabled="item.product.instock==0" @click="increase(item)"> + </button> <button @click="decrease(item)" class="btn btn-danger"> - </button>                         
+
+                            </td>
+                            <td>{{item.product.price * item.quantity}}</td>
+                        </tr>
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    <script>
+        const app = Vue.createApp({
+            data() {
+                return {
+                    products : products , 
+                    isCardVisible : false ,
+                    cart : {
+                        items : []
+                    }
+                }
+            },
+            methods: {
+                addToCart(product){
+
+                    if(!this.checkexistence(product)){
+                        this.cart.items.push({ 
+                            product : product , 
+                            quantity : 1 ,
+                        });   
+
+                        // update product stock 
+                       
+                    }else{
+                        let targetItem ; 
+
+                        for(let i=0 ; i < this.cart.items.length ; i++){
+                            if(this.cart.items[i].product.id == product.id){
+                                targetItem = this.cart.items[i]
+                                break;
+                            }
+                          }
+                          targetItem.quantity++
+                    }
+                    product.instock--
+               
+                } ,
+
+                checkexistence(product){
+                    for(let i=0 ; i < this.cart.items.length ; i++){
+                        if(this.cart.items[i].product.id == product.id){
+                            return true
+                        }
+                    }
+                } , 
+                increase(item){
+                    item.quantity++ 
+                    item.product.instock--
+                },
+                decrease(item){
+                    item.quantity-- ;
+                   if(item.quantity==0){
+                        // Remove item from cart.items
+
+                        let itemIndex ; 
+                        for(let i=0 ; i< this.cart.items.length ; i++){
+                            if(this.cart.items[i].product.id == item.product.id){
+                                itemIndex = i 
+                                break;
+                            } 
+                        }
+                        this.cart.items.splice(itemIndex , 1)
+                   }
+                  
+                    item.product.instock++
+                }
+            
+
+            },
+            computed :{
+
+            }
+
+        }); 
+        app.mount("#app")
+    </script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script>
+</body>
+</html>
